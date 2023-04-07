@@ -1,10 +1,9 @@
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
+import plotly.graph_objs as go
 import plotly.express as px
-import plotly.graph_objects as go
 import geopandas as gpd
-
 
 from dash import Dash, html, dcc, html, Input, Output
 from datetime import date
@@ -13,7 +12,6 @@ from datetime import date
 #Geospatial Data
 ph_provinces = gpd.read_file('Geo Data/gadm41_PHL_shp/gadm41_PHL_1.shp')
 ph_regions = gpd.read_file('Geo Data/gadm41_PHL_shp/Regions.shp')
-token = open(".mapbox_token").read()
 
 #datasets
 df_province_origin = pd.read_csv('processed_data/df_place_origin_provinces.csv')
@@ -21,6 +19,7 @@ df_region_origin = pd.read_csv('processed_data/df_place_origin_region.csv')
 df_all_countries = pd.read_csv('processed_data/df_all_countries.csv')
 
 #SEX
+#TODO: PROCESS THIS INTO A CSV FILE
 df_sex = pd.read_excel('Emigrant Data/Emigrant-1988-2020-Sex-Modified-Provinces.xlsx')
 df_sex = df_sex.dropna()   # drop rows with null values
 df_sex = df_sex.loc[:, (df_sex != 0).any(axis=0)]   # drop columns with all zero values
@@ -28,6 +27,7 @@ df_sex = df_sex.dropna(how='all', axis=1)   # drop columns with all null values
 df_sex = df_sex.loc[:, (df_sex != 0).any(axis=0)]   # drop columns with any zero values after dropping null columns
 df_sex_no_ratio = df_sex.drop(columns="SEX RATIO")
 df_sex_no_ratio.reset_index(drop=True, inplace=True)
+
 
 sorted_dates = ['1988','1989', '1990', '1991', '1992', '1993', '1994', '1995', '1996', '1997',
        '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006',
@@ -41,20 +41,39 @@ app = Dash(__name__,
 
 #sideabr
 SIDEBAR_STYLE = {
-   # "position": "fixed",
-   # "top": 0,
-    #"left": 0,
-    #"bottom": 0,
-    "padding": "1rem 1rem",
+    "position": "fixed",
+    "top": 0,
+    "left": 0,
+    "bottom": 0,
+    "width": "5rem",
+    "height": "100%",
+    "z-index": 1,
+    "overflow-x": "hidden",
+    "transition": "all 0.5s",
+    "padding": "0.5rem 1rem",
     "background-color": "#011530",
-    "font-size": "2rem",
-    #"width": "5rem"
+    "font-size": "1.5rem",
+}
+
+# the styles for the main content position it to the right of the sidebar and
+# add some padding.
+CONTENT_STYLE = {
+    "margin-left": "5rem",
+    "padding": "2rem 1rem",
+    "background-color": "#f8f9fa",
+}
+
+SIDE_STYLE = {
+    "margin-left": "18rem",
+    "margin-right": "2rem",
+    "padding": "2rem 5rem",
+    "background-color": "#f8f9fa",
 }
 
 CARD_STYLE1 = {
     "background": "#f8f9fa",
     "margin": "1rem",
-    "width": "50rem"
+    "width": "53.5rem"
 }
 
 CARD_STYLE2 = {
@@ -71,7 +90,8 @@ DROPBOX_STYLE = {
     "color": "black"
 }
 
-sidebar = dbc.Col(
+
+sidebar = html.Div(
     [
         dbc.Nav(
             [
@@ -79,10 +99,11 @@ sidebar = dbc.Col(
                 dbc.NavLink(html.I(className="bi bi-globe-americas"), href="/page-1", active="exact"),
             ],
             vertical=True,
+            pills=True,
         ),
     ],
-    width = 1,
-    style = SIDEBAR_STYLE,
+    id="sidebar",
+    style=SIDEBAR_STYLE,
 )
 
 line_graph = dbc.Card([
@@ -104,7 +125,7 @@ choropleth_origin_graph = dbc.Card([
     dbc.CardHeader([
         html.H4('PHILLIPPINE EMIGRANTS ORIGIN by', style={'display': 'inline-block'}),
         dcc.Dropdown(
-            ['Region', 'Province','Municipalities'],
+            ['Region','Province','Municipalities'],
             id='origin_drop',
             value = 'Region',
             style=DROPBOX_STYLE
@@ -120,16 +141,20 @@ choropleth_origin_graph = dbc.Card([
     style=CARD_STYLE1
 )
 
-center = dbc.Col([
-            dbc.Row(choropleth_origin_graph),
-            dbc.Row(line_graph)],
-            width = 7
+center = html.Div([
+            html.Div(choropleth_origin_graph),
+            html.Div(line_graph)],
+            style=CONTENT_STYLE,
         )
 
 
-side =  dbc.Col([
-            dbc.Row(
-                dbc.Card([
+side =  html.Div([
+
+            dbc.Card(
+                id='geninfo_card',
+                style=CARD_STYLE2),
+
+            dbc.Card([
                 dbc.CardBody([
                     html.H4('Emmigrants by Sex', style={'display': 'inline-block'}),
                     dcc.Dropdown(
@@ -139,21 +164,22 @@ side =  dbc.Col([
                         style=DROPBOX_STYLE),
                     dcc.Loading(dcc.Graph(id='pie_sex'))]
                 )],
-                style=CARD_STYLE2
-                )),
-            dbc.Row()
+                style=CARD_STYLE2),
+
             ],
+            
             style={"background": "#011530"},
-            width = 4
         )
 
-app.layout = dbc.Container(dbc.Row([sidebar,center,side],justify="center"),fluid=True)
+content = html.Div([center,side], className="d-flex align-items-stretch")
+
+app.layout = html.Div([sidebar,content])
 
 
 @app.callback(
     Output('choropleth_graph', "figure"), 
     Input('date_selected', "value"),
-    Input('origin_drop',"value"))
+    Input('origin_drop',"value"),)
 def display_choropleth(date_selected, origin_drop):
     year = str(date_selected)
 
@@ -185,8 +211,52 @@ def display_choropleth(date_selected, origin_drop):
     return fig
 
 @app.callback(
+    Output('geninfo_card','children'),
+    Input('date_selected', "value"),
+    [Input('choropleth_graph', 'clickData')])
+def display_info(date_selected,clickData):
+    
+    try:
+        region = clickData['points'][0]['location']
+    except:
+        region = 'None Selected'
+    try:
+        count = clickData['points'][0]['customdata'][0]
+    except:
+        count = 0
+    
+    year = date_selected
+    total = df_sex_no_ratio.loc[df_sex_no_ratio['YEAR']==int(date_selected)]['TOTAL'].values[0]
+    percentage = count/total
+
+    fig = go.Figure(go.Bar(x=[count], name='Region Selected', text=[count], marker_color = '#FFBD59',orientation='h'))
+    fig.add_bar(x=[total-count], name='Rest of the PH', text=[total-count], marker_color = '#2B3660',)
+    fig.update_layout(barmode='stack',
+                    template = 'plotly_dark',
+                    paper_bgcolor="#032047",
+                    plot_bgcolor="#032047",
+                    margin=dict(
+                        l=10,
+                        r=10,
+                        b=10,
+                        t=10,
+                        pad=4
+                    ),
+                    width=450,
+                    height=100)
+    fig.update_yaxes(visible=False)
+    
+    output = dbc.CardBody([
+                dcc.Loading(dcc.Graph(figure=fig)),
+                html.H4('General Information', style={'display': 'inline-block'}),
+                html.P('Year: ' + str(year)),
+                html.P('Region: ' + region),
+                html.P('Percentage: ' + str(round(percentage*100,2)) +'%'),])
+    return output
+
+@app.callback(
     Output('line_graph', "figure"),
-    Input('date_selected', "value"), 
+    Input('date_selected', "value"),  
     Input('line_drop', "value"))
 def display_line_graph(date_selected, category):
     fig = px.line(
@@ -206,7 +276,6 @@ def display_pie_sex(date_selected,sex_chart_type):
 
     if sex_chart_type == 'Pie Chart':
         fig = px.pie(
-                template='plotly_dark', 
                 names=['MALE','FEMALE'],
                 labels=['Male','Female'],
                 values=filtered_data.values.flatten().tolist(),
@@ -217,8 +286,21 @@ def display_pie_sex(date_selected,sex_chart_type):
             df_sex_no_ratio,
             template='plotly_dark',
             x='YEAR', 
-            y= ['MALE', 'FEMALE', 'TOTAL']
-        )
+            y= ['MALE', 'FEMALE', 'TOTAL'].count)
+    
+    fig.update_layout(
+        paper_bgcolor="#032047",
+        plot_bgcolor="#032047",
+        margin=dict(
+            l=10,
+            r=10,
+            b=10,
+            t=10,
+            pad=4
+        ),
+        width=450,
+        height=300)
+        
     return fig
 
 app.run_server(debug=True)
