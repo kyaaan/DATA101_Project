@@ -17,6 +17,9 @@ ph_regions = gpd.read_file('Geo Data/gadm41_PHL_shp/Regions.shp')
 df_province_origin = pd.read_csv('processed_data/df_place_origin_provinces.csv')
 df_region_origin = pd.read_csv('processed_data/df_place_origin_region.csv')
 df_all_countries = pd.read_csv('processed_data/df_all_countries.csv')
+df_occupation = pd.read_csv('processed_data/df_occupation.csv')
+df_civil_status = pd.read_csv('processed_data/df_civil_status.csv') 
+
 
 #SEX
 #TODO: PROCESS THIS INTO A CSV FILE
@@ -59,36 +62,51 @@ SIDEBAR_STYLE = {
 # add some padding.
 CONTENT_STYLE = {
     "margin-left": "5rem",
-    "padding": "2rem 1rem",
+    "padding": "1rem 1rem",
     "background-color": "#f8f9fa",
+    "width": "70%",
 }
 
 SIDE_STYLE = {
-    "margin-left": "18rem",
-    "margin-right": "2rem",
-    "padding": "2rem 5rem",
-    "background-color": "#f8f9fa",
+    "background": "#011530",
+    "width": "30%",
 }
 
 CARD_STYLE1 = {
     "background": "#f8f9fa",
     "margin": "1rem",
-    "width": "53.5rem"
 }
 
 CARD_STYLE2 = {
     "background": "#032047",
     "color": "white",
     "margin": "1rem",
-    "width": "30rem",
 }
 
-DROPBOX_STYLE = {
+#TODO: FIX DROPBOX
+
+DROPBOX_STYLE2 = {
     "display": "inline-block",
     "width": 200,
     "margin-left": 10,
-    "color": "black"
+    "color": "black",
+    "radius": 50,
+    "background-color": "#85A5CF",
+    "min-width": "160px",
+    "box-shadow": "0px 8px 16px 0px rgba(0,0,0,0.1)"
 }
+
+DROPBOX_STYLE1 = {
+    "display": "inline-block",
+    "width": 200,
+    "margin-left": 10,
+    "color": "black",
+    "radius": 50,
+    "background-color": "#f9f9f9",
+    "min-width": "160px",
+    "box-shadow": "0px 8px 16px 0px rgba(0,0,0,0.1)"
+}
+
 
 
 sidebar = html.Div(
@@ -113,7 +131,7 @@ line_graph = dbc.Card([
             ['TOTAL EMIGRANTS', 'Province','Municipalities'],
             id='line_drop',
             value = 'TOTAL EMIGRANTS',
-            style=DROPBOX_STYLE
+            style=DROPBOX_STYLE1
         ),
     ]),
     dbc.CardBody([
@@ -128,7 +146,7 @@ choropleth_origin_graph = dbc.Card([
             ['Region','Province','Municipalities'],
             id='origin_drop',
             value = 'Region',
-            style=DROPBOX_STYLE
+            style=DROPBOX_STYLE1
             ),
     ]),
     dbc.CardBody([
@@ -148,6 +166,7 @@ center = html.Div([
         )
 
 
+
 side =  html.Div([
 
             dbc.Card(
@@ -161,14 +180,27 @@ side =  html.Div([
                         id='sex_chart_type', 
                         options=['Line Graph', 'Pie Chart'],
                         value='Pie Chart',
-                        style=DROPBOX_STYLE),
+                        style=DROPBOX_STYLE2),
                     dcc.Loading(dcc.Graph(id='pie_sex'))]
                 )],
                 style=CARD_STYLE2),
+            
+            dbc.Card([
+                dbc.CardBody([
+                    html.H4('Major Occupation Group', style={'display': 'inline-block'}),
+                    dcc.Loading(dcc.Graph(id='bar_occupation'))]
+                )],
+                style=CARD_STYLE2),
 
+            dbc.Card([
+                dbc.CardBody([
+                    html.H4('Civil Status', style={'display': 'inline-block'}),
+                    dcc.Loading(dcc.Graph(id='bar_civil'))]
+                )],
+                style=CARD_STYLE2),
             ],
             
-            style={"background": "#011530"},
+            style=SIDE_STYLE,
         )
 
 content = html.Div([center,side], className="d-flex align-items-stretch")
@@ -242,7 +274,6 @@ def display_info(date_selected,clickData):
                         t=10,
                         pad=4
                     ),
-                    width=450,
                     height=100)
     fig.update_yaxes(visible=False)
     
@@ -284,13 +315,66 @@ def display_pie_sex(date_selected,sex_chart_type):
     else:
         fig = px.line(
             df_sex_no_ratio,
-            template='plotly_dark',
             x='YEAR', 
-            y= ['MALE', 'FEMALE', 'TOTAL'].count)
+            y= ['MALE', 'FEMALE', 'TOTAL'])
     
     fig.update_layout(
         paper_bgcolor="#032047",
         plot_bgcolor="#032047",
+        font_color="#E6E6E6",
+        margin=dict(
+            l=10,
+            r=10,
+            b=10,
+            t=10,
+            pad=4
+        ),
+        height=300)
+        
+    return fig
+
+@app.callback(
+    Output('bar_occupation', "figure"), 
+    Input('date_selected', "value"))
+def display_bar_occupation(date_selected):
+    year = str(date_selected)
+
+    fig = px.bar(
+        df_occupation, 
+        x='MAJOR OCCUPATION GROUP', 
+        y=year)
+    
+    fig.update_layout(
+        paper_bgcolor="#032047",
+        plot_bgcolor="#032047",
+        font_color="#E6E6E6",
+        margin=dict(
+            l=10,
+            r=10,
+            b=10,
+            t=10,
+            pad=4
+        ),
+        height=300)
+        
+    return fig
+
+@app.callback(
+    Output('bar_civil', "figure"), 
+    Input('date_selected', "value"))
+def display_bar_civil(date_selected):
+    year = float(date_selected)
+
+
+    fig = px.bar(
+        df_civil_status, 
+        y=['Single','Married','Widower','Separated','Divorced','Not Reported'], 
+        x='YEAR')
+    
+    fig.update_layout(
+        paper_bgcolor="#032047",
+        plot_bgcolor="#032047",
+        font_color="#E6E6E6",
         margin=dict(
             l=10,
             r=10,
