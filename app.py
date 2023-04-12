@@ -5,7 +5,7 @@ import plotly.graph_objs as go
 import plotly.express as px
 import geopandas as gpd
 
-from dash import Dash, html, dcc, html, Input, Output
+from dash import Dash, html, dcc, html, Input, Output, ctx
 from datetime import date
 
 
@@ -88,6 +88,20 @@ CARD_STYLE2 = {
     "margin": "1rem",
 }
 
+CARD_STYLE3 = {
+    "background": "#f8f9fa",
+    "margin": "1rem",
+    'display':'none'
+}
+
+CARD_STYLE4 = {
+    "background": "#032047",
+    "color": "white",
+    "margin": "1rem",
+    "display": "none",
+}
+
+
 # TODO: FIX DROPBOX
 
 DROPBOX_STYLE2 = {
@@ -117,8 +131,8 @@ sidebar = html.Div(
     [
         dbc.Nav(
             [
-                dbc.NavLink(html.I(className="bi bi-house"), id="btn-origin"),
-                dbc.NavLink(html.I(className="bi bi-globe-americas"), id="btn-destination"),
+                dbc.NavLink(html.I(className="bi bi-house"), id="btn-origin", n_clicks=0),
+                dbc.NavLink(html.I(className="bi bi-globe-americas"), id="btn-destination", n_clicks=0),
             ],
             vertical=True,
             pills=True,
@@ -132,7 +146,7 @@ line_graph = dbc.Card([
     dbc.CardHeader([
         html.H4('LINE GRAPH by', style={'display': 'inline-block'}),
         dcc.Dropdown(
-            ['TOTAL EMIGRANTS', 'Province', 'Municipalities'],
+            ['TOTAL EMIGRANTS', 'Province'],
             id='line_drop',
             value='TOTAL EMIGRANTS',
             style=DROPBOX_STYLE1
@@ -162,7 +176,8 @@ choropleth_origin_graph = dbc.Card([
                    tooltip={"placement": "bottom", "always_visible": True},
                    id='date_selected')])
 ],
-    style=CARD_STYLE1
+    style=CARD_STYLE1,
+    id = 'origin-graph'
 )
 
 choropleth_destination_graph = dbc.Card([
@@ -178,7 +193,8 @@ choropleth_destination_graph = dbc.Card([
                    tooltip={"placement": "bottom", "always_visible": True},
                    id='date_selected_destination')])
 ],
-    style=CARD_STYLE1
+    style=CARD_STYLE3,
+    id="destination-graph"
 )
 
 center = html.Div([
@@ -194,6 +210,10 @@ side = html.Div([
     dbc.Card(
                 id='geninfo_card',
                 style=CARD_STYLE2),
+
+    dbc.Card(
+                id='geninfo_destination_card',
+                style=CARD_STYLE4),
 
     dbc.Card([
         dbc.CardBody([
@@ -232,6 +252,22 @@ content = html.Div([center, side], className="d-flex align-items-stretch")
 app.layout = html.Div([sidebar, content])
 
 
+isOrigin = True #For Swapping Maptypes
+
+@app.callback(Output('destination-graph', 'style'),
+              Output('origin-graph', 'style'),
+              Output('geninfo_card', 'style'),
+              Output('geninfo_destination_card','style'),
+              Input('btn-destination','n_clicks'),
+              Input('btn-origin','n_clicks'),)
+def hide_graph(btnDest,btnOrigin):
+    if "btn-destination" == ctx.triggered_id:
+         return {'display':'block'},{'display':'none'},{'display':'none'},{'display':'block',"background": "#032047","color": "white","margin": "1rem",}
+    if "btn-origin" == ctx.triggered_id:
+        return {'display':'none'},{'display':'block'},{'display':'block',"background": "#032047","color": "white","margin": "1rem",},{'display':'none'}
+    
+    
+        
 @app.callback(
     Output('choropleth_graph', "figure"),
     Input('date_selected', "value"),
@@ -247,9 +283,6 @@ def display_choropleth(date_selected, origin_drop):
         df = df_region_origin
         geodata = ph_regions
         featureid = "properties.REGION"
-    if origin_drop == "Municipalities":
-        # insert municipality
-        pass
 
     fig = px.choropleth_mapbox(
         df,
@@ -262,11 +295,6 @@ def display_choropleth(date_selected, origin_drop):
         center={"lat": 12.879721, "lon": 121.774017},
         zoom=4,
         color_continuous_scale="Viridis",
-        #color_continuous_scale=[
-        #             [0, 'rgb(239,243,255)'],
-        #              [0.001, 'rgb(189,215,231)'],
-        #              [0.005, 'rgb(107,174,214)'],
-        #              [1, 'rgb(33,113,181,0.5)']],
     )
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     return fig
@@ -275,6 +303,7 @@ def display_choropleth(date_selected, origin_drop):
     Output('choropleth_graph_destination', "figure"),
     Input('date_selected_destination', "value"),)
 def display_choropleth_destination(date_selected):
+    
     year = str(date_selected)
     df=df_all_countries
     fig = px.choropleth_mapbox(
@@ -339,6 +368,52 @@ def display_info(date_selected, clickData):
         html.H4('General Information', style={'display': 'inline-block'}),
         html.P('Year: ' + str(year)),
         html.P('Region: ' + region),
+        html.P('Percentage: ' + str(round(percentage*100, 2)) + '%'),])
+    return output
+
+@app.callback(
+    Output('geninfo_destination_card', 'children'),
+    Input('date_selected', "value"),
+    [Input('choropleth_graph_destination', 'clickData')])
+def display_destination_info(date_selected, clickData):
+
+    try:
+        region = clickData['points'][0]['location']
+    except:
+        region = 'None Selected'
+    try:
+        count = clickData['points'][0]['customdata'][0]
+    except:
+        count = 0
+
+    year = date_selected
+    total = df_sex_no_ratio.loc[df_sex_no_ratio['YEAR'] == int(
+        date_selected)]['TOTAL'].values[0]
+    percentage = count/total
+
+    fig = go.Figure(go.Bar(x=[count], name='Region Selected', text=[
+                    count], marker_color='#FFBD59', orientation='h'))
+    fig.add_bar(x=[total-count], name='Rest of the World',
+                text=[total-count], marker_color='#2B3660',)
+    fig.update_layout(barmode='stack',
+                      template='plotly_dark',
+                      paper_bgcolor="#032047",
+                      plot_bgcolor="#032047",
+                      margin=dict(
+                          l=10,
+                          r=10,
+                          b=10,
+                          t=10,
+                          pad=4
+                      ),
+                      height=100)
+    fig.update_yaxes(visible=False)
+    
+    output = dbc.CardBody([
+        dcc.Loading(dcc.Graph(figure=fig)),
+        html.H4('General Information', style={'display': 'inline-block'}),
+        html.P('Year: ' + str(year)),
+        html.P('Country: ' + df_all_countries.loc[df_all_countries['ISO_A3'] == region]['COUNTRY'].values[0]),
         html.P('Percentage: ' + str(round(percentage*100, 2)) + '%'),])
     return output
 
