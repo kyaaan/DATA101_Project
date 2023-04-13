@@ -50,18 +50,18 @@ slider_marks = {1988: 'Year 1988', 1992: 'Year 1992', 1996: 'Year 1996', 2000:  
 app = Dash(__name__,
            external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP])
 
-# sideabr
+# sideabar
 SIDEBAR_STYLE = {
     "position": "fixed",
     "top": 0,
     "left": 0,
     "bottom": 0,
-    "width": "5rem",
+    "width": "6.5rem",
     "height": "100%",
     "z-index": 1,
     "overflow-x": "hidden",
     "transition": "all 0.5s",
-    "padding": "0.5rem 1rem",
+    "padding": "0.5rem 0.2rem",
     "background-color": "#011530",
     "font-size": "1.5rem",
 }
@@ -69,7 +69,7 @@ SIDEBAR_STYLE = {
 # the styles for the main content position it to the right of the sidebar and
 # add some padding.
 CONTENT_STYLE = {
-    "margin-left": "5rem",
+    "margin-left": "6rem",
     "padding": "1rem 1rem",
     "background-color": "#f8f9fa",
     "width": "70%",
@@ -77,7 +77,7 @@ CONTENT_STYLE = {
 
 SIDE_STYLE = {
     "background": "#011530",
-    "width": "30%",
+    "width": "25%",
 }
 
 CARD_STYLE1 = {
@@ -115,7 +115,7 @@ DROPBOX_STYLE1 = {
     "margin-left": 10,
     "color": "black",
     "radius": 50,
-    "background-color": "#f9f9f9",
+    #"background-color": "#f9f9f9",
     "min-width": "160px",
     "box-shadow": "0px 8px 16px 0px rgba(0,0,0,0.1)"
 }
@@ -155,12 +155,12 @@ sidebar = html.Div(
     [
         dbc.Nav(
             [
-                dbc.NavLink(html.I(className="bi bi-house"),
-                            id="btn-origin", n_clicks=0),
-                dbc.NavLink(html.I(className="bi bi-globe-americas"),
-                            id="btn-destination", n_clicks=0),
-                dbc.NavLink(html.I(className="bi bi-plus-square"),
-                            id="open", n_clicks=0),
+                dbc.NavLink([html.I(className="bi bi-house"),html.Br(),html.P("ORIGIN",style={"font-size":10, 'font-weight': 'bold'})],
+                            id="btn-origin", n_clicks=0, style={'text-align': 'center'}),
+                dbc.NavLink([html.I(className="bi bi-globe-americas"),html.Br(),html.P("DESTINATION",style={"font-size":10, 'font-weight': 'bold'})],
+                            id="btn-destination", n_clicks=0, style={'text-align': 'center'}),
+                dbc.NavLink([html.I(className="bi bi-plus-square"),html.Br(),html.P("FEATURES",style={"font-size":10, 'font-weight': 'bold'})],
+                            id="open", n_clicks=0, style={'text-align': 'center'}),
             ],
             vertical=True,
             pills=True,
