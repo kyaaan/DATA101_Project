@@ -77,7 +77,7 @@ CONTENT_STYLE = {
 
 SIDE_STYLE = {
     "background": "#011530",
-    "width": "25%",
+    "width": "30%",
 }
 
 CARD_STYLE1 = {
@@ -639,6 +639,7 @@ def display_bar_civil(date_selected):
         paper_bgcolor="#032047",
         plot_bgcolor="#032047",
         font_color="#E6E6E6",
+        xaxis_title = "CIVIL STATUS",
         margin=dict(
             l=10,
             r=10,
@@ -646,7 +647,6 @@ def display_bar_civil(date_selected):
             t=10,
             pad=4
         ),
-        width=450,
         height=300)
 
     return fig
@@ -673,7 +673,6 @@ def display_bar_educ(date_selected):
             t=10,
             pad=4
         ),
-        width=450,
         height=300)
 
     return fig
@@ -700,10 +699,9 @@ def display_bar_educ(date_selected):
             t=10,
             pad=4
         ),
-        width=450,
         height=300)
 
     return fig
 
 
-app.run_server(debug=True)
+app.run_server(debug=False)
