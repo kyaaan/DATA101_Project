@@ -69,7 +69,7 @@ SIDEBAR_STYLE = {
 # the styles for the main content position it to the right of the sidebar and
 # add some padding.
 CONTENT_STYLE = {
-    "margin-left": "6rem",
+    "margin-left": "6.5rem",
     "padding": "1rem 1rem",
     "background-color": "#f8f9fa",
     "width": "70%",
@@ -115,9 +115,9 @@ DROPBOX_STYLE1 = {
     "margin-left": 10,
     "color": "black",
     "radius": 50,
-    #"background-color": "#f9f9f9",
+    # "background-color": "#f9f9f9",
     "min-width": "160px",
-    "box-shadow": "0px 8px 16px 0px rgba(0,0,0,0.1)"
+    # "box-shadow": "0px 8px 16px 0px rgba(0,0,0,0.1)"
 }
 
 
@@ -155,11 +155,11 @@ sidebar = html.Div(
     [
         dbc.Nav(
             [
-                dbc.NavLink([html.I(className="bi bi-house"),html.Br(),html.P("ORIGIN",style={"font-size":10, 'font-weight': 'bold'})],
+                dbc.NavLink([html.I(className="bi bi-house"), html.Br(), html.P("ORIGIN", style={"font-size": 10, 'font-weight': 'bold'})],
                             id="btn-origin", n_clicks=0, style={'text-align': 'center'}),
-                dbc.NavLink([html.I(className="bi bi-globe-americas"),html.Br(),html.P("DESTINATION",style={"font-size":10, 'font-weight': 'bold'})],
+                dbc.NavLink([html.I(className="bi bi-globe-americas"), html.Br(), html.P("DESTINATION", style={"font-size": 10, 'font-weight': 'bold'})],
                             id="btn-destination", n_clicks=0, style={'text-align': 'center'}),
-                dbc.NavLink([html.I(className="bi bi-plus-square"),html.Br(),html.P("FEATURES",style={"font-size":10, 'font-weight': 'bold'})],
+                dbc.NavLink([html.I(className="bi bi-plus-square"), html.Br(), html.P("FEATURES", style={"font-size": 10, 'font-weight': 'bold'})],
                             id="open", n_clicks=0, style={'text-align': 'center'}),
             ],
             vertical=True,
@@ -639,7 +639,7 @@ def display_bar_civil(date_selected):
         paper_bgcolor="#032047",
         plot_bgcolor="#032047",
         font_color="#E6E6E6",
-        xaxis_title = "CIVIL STATUS",
+        xaxis_title="CIVIL STATUS",
         margin=dict(
             l=10,
             r=10,
@@ -686,7 +686,7 @@ def display_bar_educ(date_selected):
     fig = px.bar(
         df_age,
         y=year,
-        x='AGE GROUP')
+        x='AGE GROUP',)
 
     fig.update_layout(
         paper_bgcolor="#032047",
