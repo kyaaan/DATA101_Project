@@ -5,22 +5,25 @@ import plotly.graph_objs as go
 import plotly.express as px
 import geopandas as gpd
 
-from dash import Dash, html, dcc, html, Input, Output, ctx
+from dash import Dash, html, dcc, html, Input, Output, ctx, State
 from datetime import date
 
 
 # Geospatial Data
 ph_provinces = gpd.read_file('Geo Data/gadm41_PHL_shp/gadm41_PHL_1.shp')
 ph_regions = gpd.read_file('Geo Data/gadm41_PHL_shp/Regions.shp')
-#world_geo = gpd.read_file('Geo Data/World Shapefile/ne_10m_admin_0_countries.shp')
+# world_geo = gpd.read_file('Geo Data/World Shapefile/ne_10m_admin_0_countries.shp')
 world_geo = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
 # datasets
-df_province_origin = pd.read_csv('processed_data/df_place_origin_provinces.csv')
+df_province_origin = pd.read_csv(
+    'processed_data/df_place_origin_provinces.csv')
 df_region_origin = pd.read_csv('processed_data/df_place_origin_region.csv')
 df_all_countries = pd.read_csv('processed_data/df_all_countries.csv')
 df_occupation = pd.read_csv('processed_data/df_occupation.csv')
 df_civil_status = pd.read_csv('processed_data/df_civil_status.csv')
-
+df_education = pd.read_excel(
+    'Emigrant Data/Emigrant-1988-2020-Educ.xlsx').fillna(0)
+df_age = pd.read_excel('Emigrant Data/Emigrant-1981-2020-Age.xlsx').fillna(0)
 
 # SEX
 # TODO: PROCESS THIS INTO A CSV FILE
@@ -88,17 +91,8 @@ CARD_STYLE2 = {
     "margin": "1rem",
 }
 
-CARD_STYLE3 = {
-    "background": "#f8f9fa",
-    "margin": "1rem",
-    'display':'none'
-}
-
-CARD_STYLE4 = {
-    "background": "#032047",
-    "color": "white",
-    "margin": "1rem",
-    "display": "none",
+CARD_STYLE_HIDDEN = {
+    'display': 'none'
 }
 
 
@@ -127,12 +121,46 @@ DROPBOX_STYLE1 = {
 }
 
 
+# pop-up box
+modal = dbc.Modal(
+    [
+        dbc.ModalHeader(dbc.ModalTitle("FEATURES TO SHOW")),
+        dbc.ModalBody(dcc.Checklist(
+            [{"label": html.Div(['Sex'], style={'font-size': 20}), "value": 'Sex'},
+             {"label": html.Div(['Civil Status'], style={
+                                'font-size': 20}), "value": 'Civil Status'},
+             {"label": html.Div(['Educational Attainment'], style={'font-size': 20}),
+              "value": 'Educational Attainment'},
+             {"label": html.Div(['Major Occupation'], style={'font-size': 20}),
+              "value": 'Major Occupation'},
+             {"label": html.Div(['Age Group'], style={
+                                'font-size': 20}), "value": 'Age Group'},
+             ], value=['Sex'],
+            id="checklist",
+            inline=False,
+            labelStyle={"display": "flex", "align-items": "center"},
+        )),
+        dbc.ModalFooter(
+            dbc.Button(
+                "SUBMIT", id="close", className="ms-auto", n_clicks=0
+            )
+        ),
+    ],
+    id="modal",
+    is_open=False,
+)
+
+
 sidebar = html.Div(
     [
         dbc.Nav(
             [
-                dbc.NavLink(html.I(className="bi bi-house"), id="btn-origin", n_clicks=0),
-                dbc.NavLink(html.I(className="bi bi-globe-americas"), id="btn-destination", n_clicks=0),
+                dbc.NavLink(html.I(className="bi bi-house"),
+                            id="btn-origin", n_clicks=0),
+                dbc.NavLink(html.I(className="bi bi-globe-americas"),
+                            id="btn-destination", n_clicks=0),
+                dbc.NavLink(html.I(className="bi bi-plus-square"),
+                            id="open", n_clicks=0),
             ],
             vertical=True,
             pills=True,
@@ -146,7 +174,8 @@ line_graph = dbc.Card([
     dbc.CardHeader([
         html.H4('LINE GRAPH by', style={'display': 'inline-block'}),
         dcc.Dropdown(
-            ['TOTAL EMIGRANTS', 'Province'],
+            ['TOTAL EMIGRANTS', 'SEX', 'MAJOR OCCUPATION',
+                'CIVIL STATUS', 'EDUCATION', 'AGE GROUP'],
             id='line_drop',
             value='TOTAL EMIGRANTS',
             style=DROPBOX_STYLE1
@@ -177,7 +206,7 @@ choropleth_origin_graph = dbc.Card([
                    id='date_selected')])
 ],
     style=CARD_STYLE1,
-    id = 'origin-graph'
+    id='origin-graph'
 )
 
 choropleth_destination_graph = dbc.Card([
@@ -193,7 +222,7 @@ choropleth_destination_graph = dbc.Card([
                    tooltip={"placement": "bottom", "always_visible": True},
                    id='date_selected_destination')])
 ],
-    style=CARD_STYLE3,
+    style=CARD_STYLE_HIDDEN,
     id="destination-graph"
 )
 
@@ -212,20 +241,16 @@ side = html.Div([
                 style=CARD_STYLE2),
 
     dbc.Card(
-                id='geninfo_destination_card',
-                style=CARD_STYLE4),
+        id='geninfo_destination_card',
+        style=CARD_STYLE_HIDDEN),
 
     dbc.Card([
         dbc.CardBody([
             html.H4('Emmigrants by Sex', style={
                 'display': 'inline-block'}),
-            dcc.Dropdown(
-                id='sex_chart_type',
-                options=['Line Graph', 'Pie Chart'],
-                value='Pie Chart',
-                style=DROPBOX_STYLE2),
             dcc.Loading(dcc.Graph(id='pie_sex'))]
         )],
+        id='sex_card',
         style=CARD_STYLE2),
 
     dbc.Card([
@@ -234,40 +259,97 @@ side = html.Div([
                 'display': 'inline-block'}),
             dcc.Loading(dcc.Graph(id='bar_occupation'))]
         )],
-        style=CARD_STYLE2),
+        id='occupation_card',
+        style=CARD_STYLE_HIDDEN),
 
     dbc.Card([
         dbc.CardBody([
             html.H4('Civil Status', style={'display': 'inline-block'}),
             dcc.Loading(dcc.Graph(id='bar_civil'))]
         )],
-        style=CARD_STYLE2),
+        id='civil_card',
+        style=CARD_STYLE_HIDDEN),
+
+    dbc.Card([
+        dbc.CardBody([
+            html.H4('Educational Attainment', style={
+                    'display': 'inline-block'}),
+            dcc.Loading(dcc.Graph(id='bar_educ'))]
+        )],
+        id='educ_card',
+        style=CARD_STYLE_HIDDEN),
+
+    dbc.Card([
+        dbc.CardBody([
+            html.H4('Age Group', style={
+                    'display': 'inline-block'}),
+            dcc.Loading(dcc.Graph(id='bar_age'))]
+        )],
+        id='age_card',
+        style=CARD_STYLE_HIDDEN),
 ],
 
     style=SIDE_STYLE,
 )
 
-content = html.Div([center, side], className="d-flex align-items-stretch")
+content = html.Div([center, side, modal],
+                   className="d-flex align-items-stretch")
 
 app.layout = html.Div([sidebar, content])
 
 
-isOrigin = True #For Swapping Maptypes
+# This is for pop-up
+@app.callback(
+    Output("modal", "is_open"),
+    [Input("open", "n_clicks"), Input("close", "n_clicks")],
+    [State("modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+# Code to Show and Hide Cards
+
 
 @app.callback(Output('destination-graph', 'style'),
               Output('origin-graph', 'style'),
               Output('geninfo_card', 'style'),
-              Output('geninfo_destination_card','style'),
-              Input('btn-destination','n_clicks'),
-              Input('btn-origin','n_clicks'),)
-def hide_graph(btnDest,btnOrigin):
+              Output('geninfo_destination_card', 'style'),
+              Output('sex_card', 'style'),
+              Output('occupation_card', 'style'),
+              Output('civil_card', 'style'),
+              Output('educ_card', 'style'),
+              Output('age_card', 'style'),
+              Input('btn-destination', 'n_clicks'),
+              Input('btn-origin', 'n_clicks'),
+              Input('checklist', 'value'),
+              Input('close', 'n_clicks'),)
+def hide_graph(btnDest, btnOrigin, checklist, btnClose):
+
+    sexStyle = CARD_STYLE_HIDDEN
+    civilStyle = CARD_STYLE_HIDDEN
+    educStyle = CARD_STYLE_HIDDEN
+    occuStyle = CARD_STYLE_HIDDEN
+    ageStyle = CARD_STYLE_HIDDEN
+
     if "btn-destination" == ctx.triggered_id:
-         return {'display':'block'},{'display':'none'},{'display':'none'},{'display':'block',"background": "#032047","color": "white","margin": "1rem",}
-    if "btn-origin" == ctx.triggered_id:
-        return {'display':'none'},{'display':'block'},{'display':'block',"background": "#032047","color": "white","margin": "1rem",},{'display':'none'}
-    
-    
-        
+        return {'display': 'block'}, {'display': 'none'}, CARD_STYLE_HIDDEN, CARD_STYLE2, CARD_STYLE_HIDDEN, CARD_STYLE_HIDDEN, CARD_STYLE_HIDDEN, CARD_STYLE_HIDDEN, CARD_STYLE_HIDDEN
+    if ("btn-origin" == ctx.triggered_id) or ("close" == ctx.triggered_id):
+        for option in checklist:
+            if option == 'Sex':
+                sexStyle = CARD_STYLE2
+            if option == 'Civil Status':
+                civilStyle = CARD_STYLE2
+            if option == 'Educational Attainment':
+                educStyle = CARD_STYLE2
+            if option == 'Major Occupation':
+                occuStyle = CARD_STYLE2
+            if option == 'Age Group':
+                ageStyle = CARD_STYLE2
+        return {'display': 'none'}, {'display': 'block'}, CARD_STYLE2, CARD_STYLE_HIDDEN, sexStyle, occuStyle, civilStyle, educStyle, ageStyle
+
+
 @app.callback(
     Output('choropleth_graph', "figure"),
     Input('date_selected', "value"),
@@ -299,13 +381,14 @@ def display_choropleth(date_selected, origin_drop):
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     return fig
 
+
 @app.callback(
     Output('choropleth_graph_destination', "figure"),
     Input('date_selected_destination', "value"),)
 def display_choropleth_destination(date_selected):
-    
+
     year = str(date_selected)
-    df=df_all_countries
+    df = df_all_countries
     fig = px.choropleth_mapbox(
         df,
         locations="ISO_A3",
@@ -317,9 +400,9 @@ def display_choropleth_destination(date_selected):
         mapbox_style="carto-positron",
         color_continuous_scale=[
                      [0, 'rgb(239,243,255)'],
-                      [0.001, 'rgb(189,215,231)'],
-                      [0.005, 'rgb(107,174,214)'],
-                      [1, 'rgb(33,113,181,0.5)']],
+            [0.001, 'rgb(189,215,231)'],
+            [0.005, 'rgb(107,174,214)'],
+            [1, 'rgb(33,113,181,0.5)']],
     )
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     return fig
@@ -371,6 +454,7 @@ def display_info(date_selected, clickData):
         html.P('Percentage: ' + str(round(percentage*100, 2)) + '%'),])
     return output
 
+
 @app.callback(
     Output('geninfo_destination_card', 'children'),
     Input('date_selected', "value"),
@@ -383,8 +467,11 @@ def display_destination_info(date_selected, clickData):
         region = 'None Selected'
     try:
         count = clickData['points'][0]['customdata'][0]
+        country = df_all_countries.loc[df_all_countries['ISO_A3']
+                                       == region]['COUNTRY'].values[0]
     except:
         count = 0
+        country = 'None Selected'
 
     year = date_selected
     total = df_sex_no_ratio.loc[df_sex_no_ratio['YEAR'] == int(
@@ -408,13 +495,14 @@ def display_destination_info(date_selected, clickData):
                       ),
                       height=100)
     fig.update_yaxes(visible=False)
-    
+
     output = dbc.CardBody([
         dcc.Loading(dcc.Graph(figure=fig)),
         html.H4('General Information', style={'display': 'inline-block'}),
         html.P('Year: ' + str(year)),
-        html.P('Country: ' + df_all_countries.loc[df_all_countries['ISO_A3'] == region]['COUNTRY'].values[0]),
+        html.P('Country: ' + country),
         html.P('Percentage: ' + str(round(percentage*100, 2)) + '%'),])
+
     return output
 
 
@@ -424,35 +512,70 @@ def display_destination_info(date_selected, clickData):
     Input('line_drop', "value"))
 def display_line_graph(date_selected, category):
     year = str(date_selected)
-    fig = px.line(
-        df_all_countries,
-        x=year,
-        y='Total'
-    )
+    df3 = df_occupation
+    df3 = df3.set_index('MAJOR OCCUPATION GROUP').drop(
+        columns=["TOTAL"]).T.reset_index().rename(columns={'index': 'YEAR'})
+    df4 = df_education
+    df4 = df4.set_index('EDUCATIONAL ATTAINMENT').drop(
+        columns=["TOTAL"]).T.reset_index().rename(columns={'index': 'YEAR'})
+    df5 = df_age
+    df5 = df5.set_index('AGE GROUP').drop(
+        columns=["TOTAL"]).T.reset_index().rename(columns={'index': 'YEAR'})
+
+    if category == 'TOTAL EMIGRANTS':
+        fig = px.line(
+            df_sex_no_ratio,
+            x='YEAR',
+            y=['TOTAL']
+        )
+
+    if category == 'SEX':
+        fig = px.line(
+            df_sex_no_ratio,
+            x='YEAR',
+            y=['MALE', 'FEMALE'])
+
+    if category == 'MAJOR OCCUPATION':
+        fig = px.line(
+            df3,
+            x='YEAR',
+            y=df3.columns[1:-1])
+
+    if category == 'CIVIL STATUS':
+        fig = px.line(
+            df_civil_status,
+            x='YEAR',
+            y=['Single', 'Married', 'Widower', 'Separated', 'Divorced'])
+
+    if category == 'EDUCATION':
+        fig = px.line(
+            df4,
+            x='YEAR',
+            y=df4.columns[1:-1])
+
+    if category == 'AGE GROUP':
+        fig = px.line(
+            df5,
+            x='YEAR',
+            y=df5.columns[1:-1])
+
     return fig
 
 
 @app.callback(
     Output('pie_sex', "figure"),
-    Input('date_selected', "value"),
-    Input('sex_chart_type', "value"))
-def display_pie_sex(date_selected, sex_chart_type):
+    Input('date_selected', "value"))
+def display_pie_sex(date_selected):
     year = float(date_selected)
     filtered_data = df_sex_no_ratio.loc[df_sex_no_ratio['YEAR'] == year].drop(
         columns=['YEAR', 'TOTAL'])
 
-    if sex_chart_type == 'Pie Chart':
-        fig = px.pie(
-            names=['MALE', 'FEMALE'],
-            labels=['Male', 'Female'],
-            values=filtered_data.values.flatten().tolist(),
-            hole=0.3,
-        )
-    else:
-        fig = px.line(
-            df_sex_no_ratio,
-            x='YEAR',
-            y=['MALE', 'FEMALE', 'TOTAL'])
+    fig = px.pie(
+        names=['MALE', 'FEMALE'],
+        labels=['Male', 'Female'],
+        values=filtered_data.values.flatten().tolist(),
+        hole=0.3,
+    )
 
     fig.update_layout(
         paper_bgcolor="#032047",
@@ -501,13 +624,70 @@ def display_bar_occupation(date_selected):
     Output('bar_civil', "figure"),
     Input('date_selected', "value"))
 def display_bar_civil(date_selected):
-    year = float(date_selected)
+    year = int(date_selected)
+
+    df = df_civil_status
+    df = df.drop(columns=["TOTAL"]).T.reset_index()
+    df = df.rename(columns=df.iloc[0]).drop(df.index[0])
 
     fig = px.bar(
-        df_civil_status,
-        y=['Single', 'Married', 'Widower',
-            'Separated', 'Divorced', 'Not Reported'],
-        x='YEAR')
+        df,
+        y=year,
+        x=['Single', 'Married', 'Widower', 'Separated', 'Divorced', 'Not Reported'])
+
+    fig.update_layout(
+        paper_bgcolor="#032047",
+        plot_bgcolor="#032047",
+        font_color="#E6E6E6",
+        margin=dict(
+            l=10,
+            r=10,
+            b=10,
+            t=10,
+            pad=4
+        ),
+        width=450,
+        height=300)
+
+    return fig
+
+
+@app.callback(
+    Output('bar_educ', "figure"),
+    Input('date_selected', "value"))
+def display_bar_educ(date_selected):
+    year = int(date_selected)
+    fig = px.bar(
+        df_education,
+        y=year,
+        x='EDUCATIONAL ATTAINMENT')
+
+    fig.update_layout(
+        paper_bgcolor="#032047",
+        plot_bgcolor="#032047",
+        font_color="#E6E6E6",
+        margin=dict(
+            l=10,
+            r=10,
+            b=10,
+            t=10,
+            pad=4
+        ),
+        width=450,
+        height=300)
+
+    return fig
+
+
+@app.callback(
+    Output('bar_age', "figure"),
+    Input('date_selected', "value"))
+def display_bar_educ(date_selected):
+    year = str(date_selected)
+    fig = px.bar(
+        df_age,
+        y=year,
+        x='AGE GROUP')
 
     fig.update_layout(
         paper_bgcolor="#032047",
