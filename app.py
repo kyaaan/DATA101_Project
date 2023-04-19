@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objs as go
 import plotly.express as px
 import geopandas as gpd
+import numpy as np
 
 from dash import Dash, html, dcc, html, Input, Output, ctx, State
 from datetime import date
@@ -24,6 +25,20 @@ df_civil_status = pd.read_csv('processed_data/df_civil_status.csv')
 df_education = pd.read_excel(
     'Emigrant Data/Emigrant-1988-2020-Educ.xlsx').fillna(0)
 df_age = pd.read_excel('Emigrant Data/Emigrant-1981-2020-Age.xlsx').fillna(0)
+
+# Log transformed data
+df_province_origin_log = df_province_origin
+df_province_origin_log[df_province_origin_log.columns[1:]
+                       ] = df_province_origin_log[df_province_origin_log.columns[1:]].replace(0, 0.000001)
+df_province_origin_log[df_province_origin_log.columns[1:]] = np.log(
+    df_province_origin_log[df_province_origin_log.columns[1:]])
+
+df_region_origin_log = df_region_origin
+df_region_origin_log[df_region_origin_log.columns[1:]
+                     ] = df_region_origin_log[df_region_origin_log.columns[1:]].replace(0, 0.000001)
+df_region_origin_log[df_region_origin_log.columns[1:]] = np.log(
+    df_region_origin_log[df_region_origin_log.columns[1:]])
+
 
 # SEX
 # TODO: PROCESS THIS INTO A CSV FILE
@@ -156,11 +171,11 @@ sidebar = html.Div(
         dbc.Nav(
             [
                 dbc.NavLink([html.I(className="bi bi-house"), html.Br(), html.P("ORIGIN", style={"font-size": 10, 'font-weight': 'bold'})],
-                            id="btn-origin", n_clicks=0, style={'text-align': 'center'}),
+                            id="btn-origin", n_clicks=0, style={'text-align': 'center', 'color': 'white'}),
                 dbc.NavLink([html.I(className="bi bi-globe-americas"), html.Br(), html.P("DESTINATION", style={"font-size": 10, 'font-weight': 'bold'})],
-                            id="btn-destination", n_clicks=0, style={'text-align': 'center'}),
+                            id="btn-destination", n_clicks=0, style={'text-align': 'center', 'color': 'white'}),
                 dbc.NavLink([html.I(className="bi bi-plus-square"), html.Br(), html.P("FEATURES", style={"font-size": 10, 'font-weight': 'bold'})],
-                            id="open", n_clicks=0, style={'text-align': 'center'}),
+                            id="open", n_clicks=0, style={'text-align': 'center', 'color': 'white'}),
             ],
             vertical=True,
             pills=True,
@@ -191,7 +206,7 @@ choropleth_origin_graph = dbc.Card([
         html.H4('PHILLIPPINE EMIGRANTS ORIGIN by',
                 style={'display': 'inline-block'}),
         dcc.Dropdown(
-            ['Region', 'Province', 'Municipalities'],
+            ['Region', 'Province'],
             id='origin_drop',
             value='Region',
             style=DROPBOX_STYLE1
@@ -297,8 +312,9 @@ content = html.Div([center, side, modal],
 
 app.layout = html.Div([sidebar, content])
 
-
 # This is for pop-up
+
+
 @app.callback(
     Output("modal", "is_open"),
     [Input("open", "n_clicks"), Input("close", "n_clicks")],
@@ -358,11 +374,11 @@ def display_choropleth(date_selected, origin_drop):
     year = str(date_selected)
 
     if origin_drop == "Province":
-        df = df_province_origin
+        df = df_province_origin_log
         geodata = ph_provinces
         featureid = "properties.NAME_1"
     if origin_drop == "Region":
-        df = df_region_origin
+        df = df_region_origin_log
         geodata = ph_regions
         featureid = "properties.REGION"
 
@@ -417,9 +433,9 @@ def display_info(date_selected, clickData):
     try:
         region = clickData['points'][0]['location']
     except:
-        region = 'None Selected'
+        region = 'No Region'
     try:
-        count = clickData['points'][0]['customdata'][0]
+        count = round(np.exp(clickData['points'][0]['customdata'][0]))
     except:
         count = 0
 
@@ -447,11 +463,11 @@ def display_info(date_selected, clickData):
     fig.update_yaxes(visible=False)
 
     output = dbc.CardBody([
+        html.H4('General Information'),
         dcc.Loading(dcc.Graph(figure=fig)),
-        html.H4('General Information', style={'display': 'inline-block'}),
-        html.P('Year: ' + str(year)),
-        html.P('Region: ' + region),
-        html.P('Percentage: ' + str(round(percentage*100, 2)) + '%'),])
+        html.H4(region, style={'text-align': 'center',
+                'color': '#E6E6E6', 'margin-top': 10}),
+        html.H3(str(round(percentage*100, 2)) + '%', style={'text-align': 'center', 'color': '#FF914D'}),])
     return output
 
 
@@ -464,14 +480,14 @@ def display_destination_info(date_selected, clickData):
     try:
         region = clickData['points'][0]['location']
     except:
-        region = 'None Selected'
+        region = 'No Country'
     try:
         count = clickData['points'][0]['customdata'][0]
         country = df_all_countries.loc[df_all_countries['ISO_A3']
                                        == region]['COUNTRY'].values[0]
     except:
         count = 0
-        country = 'None Selected'
+        country = 'No Country'
 
     year = date_selected
     total = df_sex_no_ratio.loc[df_sex_no_ratio['YEAR'] == int(
@@ -497,11 +513,11 @@ def display_destination_info(date_selected, clickData):
     fig.update_yaxes(visible=False)
 
     output = dbc.CardBody([
+        html.H4('General Information'),
         dcc.Loading(dcc.Graph(figure=fig)),
-        html.H4('General Information', style={'display': 'inline-block'}),
-        html.P('Year: ' + str(year)),
-        html.P('Country: ' + country),
-        html.P('Percentage: ' + str(round(percentage*100, 2)) + '%'),])
+        html.H4(country, style={'text-align': 'center',
+                'color': '#E6E6E6', 'margin-top': 10}),
+        html.H3(str(round(percentage*100, 2)) + '%', style={'text-align': 'center', 'color': '#FF914D'})])
 
     return output
 
@@ -601,13 +617,15 @@ def display_bar_occupation(date_selected):
 
     fig = px.bar(
         df_occupation,
-        x='MAJOR OCCUPATION GROUP',
-        y=year)
+        y='MAJOR OCCUPATION GROUP',
+        x=year,
+        orientation='h')
 
     fig.update_layout(
         paper_bgcolor="#032047",
         plot_bgcolor="#032047",
         font_color="#E6E6E6",
+        yaxis={'categoryorder': 'total ascending'},
         margin=dict(
             l=10,
             r=10,
@@ -640,6 +658,7 @@ def display_bar_civil(date_selected):
         plot_bgcolor="#032047",
         font_color="#E6E6E6",
         xaxis_title="CIVIL STATUS",
+        xaxis={'categoryorder': 'total descending'},
         margin=dict(
             l=10,
             r=10,
@@ -659,13 +678,15 @@ def display_bar_educ(date_selected):
     year = int(date_selected)
     fig = px.bar(
         df_education,
-        y=year,
-        x='EDUCATIONAL ATTAINMENT')
+        x=year,
+        y='EDUCATIONAL ATTAINMENT',
+        orientation='h')
 
     fig.update_layout(
         paper_bgcolor="#032047",
         plot_bgcolor="#032047",
         font_color="#E6E6E6",
+        yaxis={'categoryorder': 'total ascending'},
         margin=dict(
             l=10,
             r=10,
@@ -692,6 +713,7 @@ def display_bar_educ(date_selected):
         paper_bgcolor="#032047",
         plot_bgcolor="#032047",
         font_color="#E6E6E6",
+        xaxis={'categoryorder': 'total descending'},
         margin=dict(
             l=10,
             r=10,
