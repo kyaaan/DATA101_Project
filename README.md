@@ -21,6 +21,22 @@
 6. Major Occupation
 7. Age Group
 
+# How to install
+
+1. Run Anaconda
+2. Use the conda environment in this repository to download all the necessary python modules
+```console
+conda env create --file environment.yml
+```
+3. Activate the conda environment
+```console
+conda activate plotly
+```
+4. Run the python file
+```console
+python app.py
+```
+
 # How to Navigate the Application
 The first thing that will be seen once the application is opened is the origins map where it presents the number of Filipino emigrants that were from certain parts of the country. This can be viewed by region and by province under the dropdown menu beside the title: "Emigrants Origin by:". In addition, the user may also choose the year they wish to view in the slider directly below the map.
 
