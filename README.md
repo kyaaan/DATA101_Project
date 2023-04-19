@@ -23,12 +23,12 @@
 
 # How to Navigate the Application
 The first thing that will be seen once the application is opened is the origins map where it presents the number of Filipino emigrants that were from certain parts of the country. This can be viewed by region and by province under the dropdown menu beside the title: "Emigrants Origin by:". In addition, the user may also choose the year they wish to view in the slider directly below the map.
-![image 1](https://github.com/kyaaan/DATA101_Project/tree/main/src/images/1.png)
+![image 1](./assets/1.png)
 
 Below this map is the line chart showcasing the other variables chosen by the viewer, the viewer may choose the variables: Sex, Educational Attainment, Origin, Destination, and Civil Status. The line chart aims to visualize the number of Filipinos in accordance with the variable through the years.
-![image 2](https://github.com/kyaaan/DATA101_Project/tree/main/src/images/3.png) 
+![image 2](./assets/3.png)
 
 To the right side of the map are the additional charts that the viewers may see. This is based on the checkbox popup where viewers may choose which variables to show in the application. These variables are: Sex, Educational Attainment, Origin, Destination, Civil Status, and Occupation. They may choose as many charts they wish to view. 
 To the left side of the map are certain icons that the viewers may also choose to look at. The home icon presents the origin which was explained previously while the globe icon presents the destination view. This destination view showcases the number of Filipinos who emigrated in the various countrie around the world.
-![image 3](https://github.com/kyaaan/DATA101_Project/tree/main/src/images/4.png) 
+![image 3](./assets/4.png)
 
