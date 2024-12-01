@@ -726,6 +726,5 @@ def display_bar_educ(date_selected):
     return fig
 
 
-if __name__ == "__main__": 
-    port = int(os.environ.get("PORT", 10000)) 
-    app.run_server(debug=False, host="0.0.0.0", port=port)
+if __name__ == "__main__":
+    app.run_server(debug=False, host="0.0.0.0", port=10000)
