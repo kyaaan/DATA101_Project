@@ -1,5 +1,5 @@
 gdal-bin
-libgdal-DEV
+libgdal-dev
 proj-bin
 gcc
 libgeos-c1v5
