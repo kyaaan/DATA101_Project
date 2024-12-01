@@ -725,5 +725,3 @@ def display_bar_educ(date_selected):
 
     return fig
 
-
-app.run_server(debug=False)
