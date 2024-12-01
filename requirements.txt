@@ -24,7 +24,7 @@ Flask==2.2.2
 Flask-Compress==1.13
 folium==0.14.0
 fonttools==4.25.0
-GDAL==3.9.0
+GDAL==3.6.2
 geopandas==0.12.2
 idna==3.4
 importlib-metadata==4.11.3
