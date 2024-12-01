@@ -5,8 +5,6 @@ COPY requirements.txt /
 RUN pip install -r /requirements.txt \
 	&& rm -rf /root/.cache
 
-COPY src/ ./
-
 ENV ENVIRONMENT_FILE=".env"
 
 EXPOSE 8085
