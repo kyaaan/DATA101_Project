@@ -727,4 +727,4 @@ def display_bar_educ(date_selected):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=False, host="0.0.0.0", port=10000)
+    app.run(debug=False, host="0.0.0.0", port=10000)
