@@ -43,7 +43,7 @@ munch==2.5.0
 munkres==1.1.4
 networkx==2.8.4
 numexpr==2.8.4
-numpy==1.23.5
+numpy==
 openpyxl==3.0.10
 packaging==22.0
 pandas==1.5.3
