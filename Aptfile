@@ -1,6 +1,1 @@
 gdal-bin
-libgdal-dev
-proj-bin
-gcc
-libgeos-c1v5
-libblas3
