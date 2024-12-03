@@ -78,7 +78,7 @@ CONTENT_BODY_STYLE = {
     "margin-right": "1rem",
     "padding": "1rem 1rem",
     "background-color": "#f8f9fa",
-    "width": "100%",
+    "width": "10 0%",
 }
 
 body_content = html.Div([
@@ -247,29 +247,12 @@ side = html.Div([
 
 content = html.Div([center, side], className="d-flex align-items-stretch")
 
-rationale_modal = html.Div([
-    dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle("Rationale and Purpose of this Website")),
-        dbc.ModalBody(dcc.Markdown("""
-            This website aims to provide detailed information on migration destinations for Filipinos. It offers insights into the countries where Filipinos migrate, including job opportunities, living conditions, and cultural aspects. The goal is to help Filipinos make informed decisions about migration and prepare them for their new life abroad. By providing comprehensive data and resources, we strive to support the Filipino community in achieving a better future through migration.
-        """), style={
-            "white-space": "pre-wrap",
-            "text-align": "justify",
-            "overflow-wrap": "break-word",
-            "word-wrap": "break-word",
-            "word-break": "break-word"
-        }),
-        dbc.ModalFooter(
-            dbc.Button("Close", id="close-rationale", className="ml-auto")
-        )
-    ], id="rationale-modal", is_open=False, size="lg", style={"max-width": "100%"})
-])
-
 app.layout = html.Div([
     sidebar, 
     content, 
     body_content,
-    references_modal
+    references_modal,
+    rationale_modal
 ])
 
 @app.callback(
