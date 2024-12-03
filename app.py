@@ -14,6 +14,7 @@ world_geo = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
 # Datasets
 df_all_countries = pd.read_csv('processed_data/df_all_countries.csv')
 df_sex_no_ratio = pd.read_excel('Emigrant Data/Emigrant-1988-2020-Sex-Modified-Provinces.xlsx').fillna(0)
+df_country_details = pd.read_csv('processed_data/country_details.csv')
 
 df_sex_no_ratio = df_sex_no_ratio.dropna(how='all', axis=1).loc[:, (df_sex_no_ratio != 0).any(axis=0)]
 df_sex_no_ratio.reset_index(drop=True, inplace=True)
@@ -36,6 +37,7 @@ SIDEBAR_STYLE = {
 }
 
 CONTENT_STYLE = {
+    "margin-top": "2rem",
     "margin-left": "1rem",
     "margin-right": "1rem",
     "padding": "1rem 1rem",
@@ -70,10 +72,18 @@ DROPBOX_STYLE1 = {
     "min-width": "160px",
 }
 
+CONTENT_BODY_STYLE = {
+    "margin-top": "2rem",
+    "margin-left": "1rem",
+    "margin-right": "1rem",
+    "padding": "1rem 1rem",
+    "background-color": "#f8f9fa",
+    "width": "100%",
+}
+
 body_content = html.Div([
-    html.H2("Country Info Here")
-    ]
-)
+    html.Div(id='country-details')
+],style=CONTENT_BODY_STYLE)
 
 sidebar = html.Div([
     html.H2('Migration Guide for Filipinos', style={'textAlign': 'center', 'color': 'white'}),
@@ -89,7 +99,7 @@ line_graph = dbc.Card([
 ], style=CARD_STYLE1)
 
 choropleth_destination_graph = dbc.Card([
-    dbc.CardHeader([html.H4('Philippine Emmigration', style={'display': 'inline-block'})]),
+    dbc.CardHeader([html.H4('Philippine Emigration', style={'display': 'inline-block'})]),
     dbc.CardBody([
         dcc.Loading(dcc.Graph(id='choropleth_graph_destination')),
         dcc.Slider(min=1988, max=2020, step=1, value=1988, marks=slider_marks,
@@ -170,5 +180,32 @@ def display_destination_info(date_selected, clickData):
         html.H3(f"{round(percentage * 100, 2)}%", style={'text-align': 'center', 'color': '#FF914D'})
     ])
     return output
+
+@app.callback(
+    Output('country-details', 'children'),
+    [Input('choropleth_graph_destination', 'clickData')]
+)
+def display_country_details(clickData):
+    if clickData:
+        region = clickData['points'][0]['location']
+        country_details = df_country_details[df_country_details['Country'] == region]
+        if not country_details.empty:
+            country_details = country_details.iloc[0]
+            country_name = country_details['Country']
+            about = country_details['About Country']
+            location = country_details['Location']
+            jobs = country_details['Available Jobs and Salaries Expectations']
+            benefits = country_details['Benefits']
+            requirements = country_details['Requirements']
+            
+            benefits_list = '\n- '.join(benefits.split('. '))
+            requirements_list = '\n- '.join(requirements.split('. '))
+    
+            return dcc.Markdown(
+                "## Country: " + country_name + "\n\n" +
+                "**About:** " + about + "\n\n" +
+                "**Location:** " + location + "\n\n" +
+                "**Available Jobs and Salaries Expectations:**\n- " + jobs.replace(', ', '\n- ') + "\n"
+            )
 
 app.run(debug=False, host="0.0.0.0", port=10000)
