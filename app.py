@@ -5,7 +5,7 @@ import plotly.graph_objs as go
 import geopandas as gpd
 import numpy as np
 
-from dash import Dash, html, dcc, Input, Output
+from dash import Dash, html, dcc, Input, Output, State
 from datetime import date
 
 # Geospatial Data
@@ -82,8 +82,118 @@ CONTENT_BODY_STYLE = {
 }
 
 body_content = html.Div([
-    html.Div(id='country-details')
-],style=CONTENT_BODY_STYLE)
+    html.Div(id='country-details')  
+    ],
+    style = CONTENT_BODY_STYLE
+)
+
+references_modal = html.Div([
+    dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("References")),
+        dbc.ModalBody(dcc.Markdown("""
+            Acemoneytransfer. (n.d.). 10 things every overseas Filipino worker in Germany must know in 2024. Retrieved from https://acemoneytransfer.com/blog/10-things-every-overseas-filipino-worker-in-germany-must-know-in-2024
+
+            Acemoneytransfer. (n.d.). Top 10 job fields for Filipinos in Italy: Everything to know. Retrieved from https://acemoneytransfer.com/blog/top-10-job-fields-for-filipinos-in-italy-everything-to-know
+
+            Archium Ateneo. (n.d.). Faculty publications on Korean studies. Retrieved from https://archium.ateneo.edu/cgi/viewcontent.cgi?article=1003&context=korean-stud-faculty-pubs
+
+            CANAM Group. (2024, January 24). The United States of America is considered to be a land of opportunities. CANAM Group. Retrieved November 26, 2024, from https://www.canamgroup.com/blog/the-united-states-of-america-is-considered-to-be-a-land-of-opportunities#:~:text=The%20United%20States%20of%20America,vast%20landscapes%2C%20attracting%20souls%20worldwide
+
+            CIFAL Philippines. (2018). Korean migration to the Philippines. Retrieved from https://cifal.up.edu.ph/wp-content/uploads/2018/07/Korean-Migration-to-PH-09182018.pdf
+
+            Commission on Filipinos Overseas (CFO). (2024). To a better life: Filipino migration through the years. Commission on Filipinos Overseas. Retrieved November 26, 2024, from https://cfo.gov.ph/to-a-better-life-filipino-migration-through-the-years/
+
+            Distance From To. (n.d.). Distance from South Korea to the Philippines. Retrieved from https://www.distancefromto.net/distance-from-south-korea-to-philippines
+
+            Econstor. (2024). Overseas Filipino workers and their remittances: New evidence on migration and development. Retrieved November 26, 2024, from https://www.econstor.eu/bitstream/10419/284616/1/pidsdps2317.pdf
+
+            Educatly. (n.d.). Top 20 most in-demand jobs in Spain. Retrieved from https://www.educatly.com/blog/343/top-20-most-in-demand-jobs-in-spain
+
+            Figure NZ. (n.d.). Industry statistics in New Zealand. Retrieved from https://figure.nz/chart/WRpSmBftC60lEu2q
+
+            Globaledge. (n.d.). Germany country overview. Retrieved from https://globaledge.msu.edu/countries/germany#:~:text=Germany%20is%20a%20country%20located,Sea%2C%20and%20the%20Baltic%20Sea
+
+            Ipass Processing. (n.d.). The ultimate guide: Top 10 in-demand jobs in Canada by 2024. Retrieved from https://ipassprocessing.com/the-ultimate-guide-top-10-in-demand-jobs-in-canada-by-2024/
+
+            Korean Culture and Information Service. (n.d.). Korean culture and the arts. Retrieved from https://www.koreanculture.org/korea-information-culture-and-the-arts
+
+            Migration Policy Institute. (2024). The Philippines and migration: The next generation of OFWs. Migration Policy Institute. Retrieved November 26, 2024, from https://www.migrationpolicy.org/article/philippines-migration-next-generation-ofws
+
+            Migration Workers Office. (n.d.). MWO Madrid, Spain. Retrieved from https://migrantworkersoffice.com/mwo-madrid-spain/
+
+            Nationwide Visas. (n.d.). Average salary in Germany. Retrieved from https://www.nationwidevisas.com/germany-immigration/average-salary-in-germany/
+
+            Philippine Go. (2024, July 27). 25,000 job opportunities in Japan await Filipinos. Retrieved from https://filipinotimes.net/latest-news/2024/07/27/25000-job-opportunities-in-japan-await-filipinos-dmw/
+
+            Philippine Institute for Development Studies (PIDS). (2024). Migrant workers and their families: Challenges and opportunities. Philippine Institute for Development Studies. Retrieved November 26, 2024, from https://serp-p.pids.gov.ph/feature/public/index-view?feauredtype_id=1&slug=migrant-workers-and-their-families#:~:text=OFWs%20face%20numerous%20challenges%2C%20including,workers%20in%20the%20Middle%20East
+
+            Placement International. (n.d.). Why is Spain a good destination for Filipino professionals? Retrieved from https://placement-international.com/blog/why-is-spain-a-good-destination-for-filipino-professionals
+
+            POEA Online. (n.d.). Filipino jobs in South Korea. Retrieved from https://poeaonline.com/filipino-jobs-south-korea/
+
+            POEA Online. (n.d.). Search DMW jobs in South Korea. Retrieved from https://poeaonline.com/search-dmw-jobs-south-korea/
+
+            PSS Removals. (n.d.). New Zealand's most in-demand jobs. Retrieved from https://www.pssremovals.com/blog/new-zealand-most-in-demand-jobs
+
+            Remote. (n.d.). New Zealand employee benefits and compensation. Retrieved from https://remote.com/blog/new-zealand-employee-benefits-compensation
+
+            ResumeCoach. (n.d.). Jobs in demand in the USA. Retrieved November 26, 2024, from https://www.resumecoach.com/jobs-in-demand-usa/
+
+            Signal Hire. (n.d.). 10 in-demand jobs in the UK in 2024. Retrieved from https://www.signalhire.com/blog/10-in-demand-jobs-in-the-uk-in-2024/
+
+            Spain Info. (n.d.). Facts about Spain: Geography and landscape. Retrieved from https://www.spain.info/en/discover-spain/facts-spain-geography-landscape/#:~:text=Where%20is%20Spain%3F,also%20has%20two%20large%20archipelagos
+
+            Stats NZ. (n.d.). Industries in New Zealand. Retrieved from https://www.stats.govt.nz/topics/industries
+
+            The Canada Guide. (n.d.). What is Canada known for? Retrieved from https://travel2next.com/what-is-canada-known-for/
+
+            The Travelobiz. (n.d.). UK shortage occupation list jobs for skilled worker visas. Retrieved from https://travelobiz.com/uk-shortage-occupation-list-jobs-requirements-for-skilled-worker-visa/
+
+            Trade.gov. (n.d.). New Zealand market overview. Retrieved from https://www.trade.gov/country-commercial-guides/new-zealand-market-overview#:~:text=The%20foundation%20of%20New%20Zealand's,totaled%20approximately%20US%2413%20billion
+
+            UIS Australia. (2024, May 12). 5 top reasons to work in Australia. UIS Australia. Retrieved November 26, 2024, from https://www.uisaustralia.com/blog/5-top-reasons-to-work-in-australia/
+
+            Victoria University. (n.d.). The 10 most in-demand jobs in Australia right now. Victoria University. Retrieved November 26, 2024, from https://www.vu.edu.au/about-vu/news-events/study-space/the-10-most-in-demand-jobs-in-australia-right-now
+
+            Webapps. (n.d.). Germany work permits and immigration. Retrieved from https://www.germany-visa.org/immigration/working-germany-getting-german-work-permit/
+        """), style={
+            "white-space": "pre-wrap",
+            "text-align": "justify",
+            "overflow-wrap": "break-word",
+            "word-wrap": "break-word",
+            "word-break": "break-word"
+        }),
+        dbc.ModalFooter(
+            dbc.Button("Close", id="close-references", className="ml-auto")
+        )
+    ], id="references-modal", is_open=False, size="lg", style={"max-width": "100%"})
+])
+
+rationale_modal = html.Div([
+    dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Rationale and Purpose of this Website")),
+        dbc.ModalBody(dcc.Markdown("""
+            **Rationale:**
+            Migration has long been a part of the Philippines' history and is deeply embedded in Filipino culture. Overseas Filipino Workers (OFWs) have been celebrated by the Philippine government as “New Heroes” (Uy-Tioco, 2007) for their significant contributions to the nation’s economy and society. According to Opiniano and Ang (2024), the enactment of the 1974 Labor Code (Presidential Decree 442) marked a turning point in the country's migration history, introducing measures to regulate and promote labor migration. Since then, emigration has played a crucial role in driving economic growth, with millions of Filipino workers remitting billions of dollars annually. This continuous flow of remittances has created a feedback loop, where emigration fuels national development, making overseas migration increasingly appealing.
+
+            Today, an estimated 10 million Filipino emigrants (Opiniano and Ang, 2024) are spread across more than 200 countries, working in a wide range of occupations and skill levels (United Nations, n.d.). Despite these successes, OFWs face numerous challenges. Before migrating, many encounter issues such as illegal recruitment and contract substitution. Once abroad, they may endure excessive work hours, maltreatment from employers, particularly among migrant domestic workers, and other labor-related abuses (Yap, 2024). These problems are not new; challenges such as illegal placement fees, irregular migration (often referred to as "tago nang tago" or "TNT"), long working hours, and lack of rest days for domestic workers have persisted since the 1970s (Ramon et al., 2023). Addressing these longstanding issues remains critical to improving the welfare of OFWs and ensuring that migration continues to be a positive force for both workers and the nation.
+
+            **Purpose:**
+            This website is designed to help Filipinos make informed decisions about migrating to different countries. It provides essential details about each destination, including a brief description of the country’s cultural, social, and economic environment. It highlights what makes the destination attractive or challenging for Filipinos, along with information about its geographical location to help users understand how far it is from the Philippines. The site also includes details about available jobs, such as in-demand roles for Filipinos in industries like healthcare, IT, construction, or domestic work. Salary expectations are clearly outlined, showing the average salary ranges for common migrant jobs. Additionally, the website provides information on benefits, such as healthcare, paid leave, housing allowances, and educational opportunities for dependents. Finally, it lists the requirements for migration, including visa types, work permits, educational qualifications, language requirements, and any specific certifications needed.
+        """), style={
+            "white-space": "pre-wrap",
+            "text-align": "justify",
+            "overflow-wrap": "break-word",
+            "word-wrap": "break-word",
+            "word-break": "break-word"
+        }),
+        dbc.ModalFooter(
+            dbc.Button("Close", id="close-rationale", className="ml-auto")
+        )
+    ], id="rationale-modal", is_open=False, size="lg", style={"max-width": "100%"})
+])
+
+
 
 sidebar = html.Div([
     html.H2('Migration Guide for Filipinos', style={'textAlign': 'center', 'color': 'white'}),
@@ -109,11 +219,16 @@ choropleth_destination_graph = dbc.Card([
 
 center = html.Div([html.Div(choropleth_destination_graph)], style=CONTENT_STYLE)
 
-intro = html.Div([
-    html.H2("WELCOME!"),
-    html.P("Migration has been deeply woven into the fabric of the Philippines' history, profoundly influencing Filipino culture. This website offers an insightful look into the destinations where Filipinos migrate and provides detailed information about each country."),
-    html.P("Click on a country on the map to view more details"),
-], style={'textAlign': 'justify', 'color': 'white', 'padding': '0.5em'})
+intro = dcc.Markdown("""
+## WELCOME!
+
+Migration has been deeply woven into the fabric of the Philippines' history, profoundly influencing Filipino culture. This website offers an insightful look into the destinations where Filipinos migrate and provides detailed information about each country.
+
+Click on a country on the map to view more details. Use the slider below the map to explore emigration patterns over time.
+
+We hope this platform helps you in making informed decisions about migration!
+""", style={'text-align': 'justify', 'color': 'white', 'padding': '1em'})
+
 
 side = html.Div([
     intro,
@@ -123,13 +238,61 @@ side = html.Div([
             html.H4("Select a country to see details", style={'text-align': 'center', 'color': '#E6E6E6', 'margin-top': 10}),
         ])
     ], style=CARD_STYLE2),
+    html.Div([
+        dbc.Button("References", id="open-references", color="primary", style={"width": "100%", "margin-top": "1rem"}),
+        dbc.Button("Rationale and Purpose", id="open-rationale", color="primary", style={"width": "100%", "margin-top": "1rem"})
+    ], style={'padding': '1rem'})
 ], style=SIDE_STYLE)
+
 
 content = html.Div([center, side], className="d-flex align-items-stretch")
 
-app.layout = html.Div([sidebar, content, body_content])
+rationale_modal = html.Div([
+    dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Rationale and Purpose of this Website")),
+        dbc.ModalBody(dcc.Markdown("""
+            This website aims to provide detailed information on migration destinations for Filipinos. It offers insights into the countries where Filipinos migrate, including job opportunities, living conditions, and cultural aspects. The goal is to help Filipinos make informed decisions about migration and prepare them for their new life abroad. By providing comprehensive data and resources, we strive to support the Filipino community in achieving a better future through migration.
+        """), style={
+            "white-space": "pre-wrap",
+            "text-align": "justify",
+            "overflow-wrap": "break-word",
+            "word-wrap": "break-word",
+            "word-break": "break-word"
+        }),
+        dbc.ModalFooter(
+            dbc.Button("Close", id="close-rationale", className="ml-auto")
+        )
+    ], id="rationale-modal", is_open=False, size="lg", style={"max-width": "100%"})
+])
 
-# Callbacks
+app.layout = html.Div([
+    sidebar, 
+    content, 
+    body_content,
+    references_modal
+])
+
+@app.callback(
+    Output("references-modal", "is_open"),
+    [Input("open-references", "n_clicks"), Input("close-references", "n_clicks")],
+    [State("references-modal", "is_open")],
+)
+def toggle_references_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("rationale-modal", "is_open"),
+    [Input("open-rationale", "n_clicks"), Input("close-rationale", "n_clicks")],
+    [State("rationale-modal", "is_open")],
+)
+def toggle_rationale_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+
 @app.callback(
     Output('choropleth_graph_destination', "figure"),
     Input('date_selected_destination', "value"),
@@ -142,6 +305,7 @@ def display_choropleth_destination(date_selected):
         hover_data=[year], color=year, zoom=1, mapbox_style="carto-positron",
         color_continuous_scale=[
             [0, 'rgb(239,243,255)'],
+
             [0.001, 'rgb(189,215,231)'],
             [0.005, 'rgb(107,174,214)'],
             [1, 'rgb(33,113,181,0.5)']],
