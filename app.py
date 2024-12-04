@@ -14,7 +14,7 @@ world_geo = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
 # Datasets
 df_all_countries = pd.read_csv('processed_data/df_all_countries.csv')
 df_sex_no_ratio = pd.read_excel('Emigrant Data/Emigrant-1988-2020-Sex-Modified-Provinces.xlsx').fillna(0)
-df_country_details = pd.read_csv('processed_data/country_details.csv')
+df_country_details = pd.read_excel('processed_data/country_details.xlsx')
 
 df_sex_no_ratio = df_sex_no_ratio.dropna(how='all', axis=1).loc[:, (df_sex_no_ratio != 0).any(axis=0)]
 df_sex_no_ratio.reset_index(drop=True, inplace=True)
@@ -335,24 +335,57 @@ def display_destination_info(date_selected, clickData):
 def display_country_details(clickData):
     if clickData:
         region = clickData['points'][0]['location']
+        full_country_name = df_all_countries[df_all_countries['ISO_A3'] == region].iloc[0]['COUNTRY']  # Assuming 'Country Name' column exists
         country_details = df_country_details[df_country_details['Country'] == region]
         if not country_details.empty:
             country_details = country_details.iloc[0]
-            country_name = country_details['Country']
             about = country_details['About Country']
             location = country_details['Location']
             jobs = country_details['Available Jobs and Salaries Expectations']
             benefits = country_details['Benefits']
             requirements = country_details['Requirements']
+
+            # Split jobs data into structured format
+            job_entries = jobs.split('\n\n')
+            table_header = html.Thead(html.Tr([html.Th("Job Title"), html.Th("Average Salary"), html.Th("Notes")]))
+            rows = []
+
+            for entry in job_entries:
+                lines = [line.strip() for line in entry.split('\n') if line.strip()]
+                if lines:
+                    job_title = lines[0].replace(":", "")
+                    salary_line = next((line for line in lines if "Average Salary:" in line or "Ave. Salary:" in line), "")
+                    notes_lines = [line.replace("Notes:", "").strip() for line in lines if "Notes:" in line or ";" in line]
+
+                    salary = salary_line.replace("Average Salary:", "").replace("Ave. Salary:", "").strip() if salary_line else "N/A"
+                    notes = html.Div([html.P(note) for note in "; ".join(notes_lines).split(";")])
+
+                    rows.append(html.Tr([
+                        html.Td(job_title, style={"white-space": "normal"}), 
+                        html.Td(salary, style={"white-space": "normal"}), 
+                        html.Td(notes, style={"white-space": "normal"})
+                    ]))
             
-            benefits_list = '\n- '.join(benefits.split('. '))
-            requirements_list = '\n- '.join(requirements.split('. '))
+            table_body = html.Tbody(rows)
+            jobs_table = dbc.Table([table_header, table_body], bordered=True, hover=True, responsive=True, striped=True)  # Disabled dark theme
     
-            return dcc.Markdown(
-                "## Country: " + country_name + "\n\n" +
-                "**About:** " + about + "\n\n" +
-                "**Location:** " + location + "\n\n" +
-                "**Available Jobs and Salaries Expectations:**\n- " + jobs.replace(', ', '\n- ') + "\n"
-            )
+            benefits_list = html.Ul([html.Li(item) for item in benefits.split('\n') if item])
+            requirements_list = html.Ul([html.Li(item) for item in requirements.split('\n') if item])
+
+            return html.Div([
+                html.H2(full_country_name, style={"text-align": "center", "margin-bottom": "1em", "font-size": "2em"}),
+                dcc.Markdown(f"**About:** {about}"),
+                dcc.Markdown(f"**Location:** {location}"),
+                dcc.Markdown("**Available Jobs and Salary Expectations:**"),
+                jobs_table,
+                dcc.Markdown("**Benefits:**"),
+                benefits_list,
+                dcc.Markdown("**Requirements:**"),
+                requirements_list
+            ], style={"padding": "2em"})
+        else:
+            return dcc.Markdown("**Data not available**")
+    else:
+        return dcc.Markdown("**No country selected**")
 
 app.run(debug=False, host="0.0.0.0", port=10000)
